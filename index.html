@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>JR Painting Calculator</title>
+<style>
+:root{
+  --pri:#2563eb;--pri-d:#1d4ed8;--bg:#f1f5f9;--card:#fff;--bdr:#e2e8f0;
+  --txt:#1e293b;--muted:#64748b;--ok:#10b981;--warn:#f59e0b;--err:#ef4444;
+  --cyan:#06b6d4;--purple:#a78bfa;--orange:#fb923c;
+  --radius:10px;--shadow:0 1px 3px rgba(0,0,0,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:15px;-webkit-text-size-adjust:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--txt);line-height:1.5;padding-bottom:72px;overflow-x:hidden}
+
+/* ===== HEADER ===== */
+.hdr{background:linear-gradient(135deg,var(--pri),#7c3aed);color:#fff;padding:16px 20px;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(0,0,0,.2)}
+.hdr h1{font-size:1.15rem;font-weight:800}
+.hdr small{opacity:.8;font-size:.72rem;display:block;margin-top:2px}
+
+/* ===== BOTTOM NAV (mobile) ===== */
+.bnav{position:fixed;bottom:0;left:0;right:0;background:#1e293b;display:flex;z-index:200;box-shadow:0 -2px 12px rgba(0,0,0,.2)}
+.bnav button{flex:1;padding:10px 4px 8px;background:0;border:0;color:#94a3b8;font-size:.65rem;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;transition:.2s}
+.bnav button.on{color:#60a5fa}
+.bnav button .ico{font-size:1.3rem}
+
+/* ===== TABS (desktop) ===== */
+.dtabs{display:none;background:#1e293b;padding:0 20px}
+.dtabs button{padding:12px 20px;background:0;border:0;border-bottom:3px solid transparent;color:#94a3b8;font-size:.85rem;font-weight:600;cursor:pointer;transition:.2s}
+.dtabs button:hover{color:#fff}
+.dtabs button.on{color:#fff;border-bottom-color:#60a5fa;background:rgba(255,255,255,.05)}
+
+@media(min-width:769px){
+  .bnav{display:none}
+  .dtabs{display:flex}
+  body{padding-bottom:0}
+}
+
+/* ===== PAGE ===== */
+.page{display:none;padding:16px;max-width:1400px;margin:0 auto}
+.page.on{display:block}
+@media(min-width:769px){.page{padding:24px}}
+
+/* ===== CARDS ===== */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--bdr);overflow:hidden;box-shadow:var(--shadow);margin-bottom:14px}
+.card-h{padding:12px 16px;font-weight:700;font-size:.88rem;display:flex;align-items:center;gap:8px}
+.card-b{padding:4px 16px 16px}
+
+/* ===== RESULT BANNER ===== */
+.banner{background:linear-gradient(135deg,#1e293b,#334155);color:#fff;border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.banner .title{font-weight:700;font-size:.92rem}
+.banner .sub{font-size:.75rem;opacity:.75;margin-top:2px}
+.kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+@media(min-width:600px){.kpi-grid{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}}
+.kpi{background:rgba(255,255,255,.1);border-radius:8px;padding:10px 8px;text-align:center}
+.kpi .v{font-size:1.25rem;font-weight:800;line-height:1.2}
+.kpi .l{font-size:.62rem;opacity:.75;margin-top:2px}
+.kpi.green .v{color:#34d399}.kpi.blue .v{color:#60a5fa}.kpi.yellow .v{color:#fbbf24}
+.kpi.pink .v{color:#f472b6}.kpi.cyan .v{color:#22d3ee}.kpi.purple .v{color:var(--purple)}
+.kpi.orange .v{color:var(--orange)}
+
+/* ===== FORM FIELDS ===== */
+.fld{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;gap:8px}
+.fld:last-child{border:0}
+.fld label{font-size:.78rem;color:var(--muted);flex:1;min-width:0}
+.fld .u{display:inline-block;background:#f1f5f9;color:#475569;font-size:.62rem;padding:1px 5px;border-radius:3px;margin-left:3px;white-space:nowrap}
+.fld input,.fld select{width:110px;padding:8px 10px;border:1px solid var(--bdr);border-radius:8px;font-size:.88rem;text-align:right;background:#f8fafc;-webkit-appearance:none;flex-shrink:0}
+.fld input:focus,.fld select:focus{outline:0;border-color:var(--pri);box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+.fld input[readonly]{background:#f1f5f9;font-weight:600;border-color:transparent}
+.fld input[type=text]{text-align:left}
+
+.divider{height:1px;background:var(--bdr);margin:6px 0}
+.stitle{font-size:.72rem;font-weight:700;color:var(--pri);text-transform:uppercase;letter-spacing:.4px;padding:10px 0 2px}
+.note{font-size:.72rem;color:var(--muted);padding:8px 10px;background:#f8fafc;border-radius:6px;margin-top:8px;border-left:3px solid var(--pri);line-height:1.6}
+
+/* ===== TWO-COL GRID (desktop) ===== */
+.two-col{display:grid;gap:14px}
+@media(min-width:769px){.two-col{grid-template-columns:1fr 1fr}}
+
+/* ===== PRESET BAR ===== */
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.presets button{padding:7px 14px;background:#fff;border:1px solid var(--bdr);border-radius:8px;font-size:.78rem;cursor:pointer;transition:.2s;white-space:nowrap}
+.presets button:hover,.presets button.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+
+/* ===== TABLES ===== */
+.tbl{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:8px}
+.tbl th{background:#f1f5f9;padding:8px 10px;text-align:left;font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:2px solid var(--bdr);white-space:nowrap}
+.tbl td{padding:8px 10px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.tbl tr:hover{background:#f8fafc}
+.tbl .r{text-align:right;font-variant-numeric:tabular-nums}
+.tbl .b{font-weight:700}
+.tbl input[type=number]{width:72px;padding:6px;border:1px solid var(--bdr);border-radius:6px;text-align:right;font-size:.82rem}
+.tbl input[type=checkbox]{width:18px;height:18px;accent-color:var(--pri)}
+.tbl-total{background:linear-gradient(135deg,#1e293b,#334155)!important;color:#fff!important}
+.tbl-total td{color:#fff;font-weight:700;border:0;padding:12px 10px}
+.tbl-group td{background:#eff6ff;font-weight:700;color:#1e40af;font-size:.78rem;padding:6px 10px}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -16px;padding:0 16px}
+
+/* ===== SETTINGS PANEL ===== */
+.settings-input{width:100%;padding:10px 12px;border:1px solid var(--bdr);border-radius:8px;font-size:.88rem;margin-bottom:10px;font-family:monospace}
+.btn{display:block;width:100%;padding:12px;background:var(--pri);color:#fff;border:0;border-radius:var(--radius);font-size:.92rem;font-weight:700;cursor:pointer;transition:.2s;margin-top:8px}
+.btn:hover{background:var(--pri-d)}
+.btn-warn{background:var(--warn)}
+.btn-ok{background:var(--ok)}
+.btn-sm{display:inline-block;width:auto;padding:8px 16px;font-size:.82rem}
+.status{padding:10px 14px;border-radius:8px;font-size:.82rem;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.status.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.status.err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.status.info{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+
+/* ===== BAR CHART ===== */
+.bar-row{display:flex;align-items:center;gap:8px;margin:6px 0}
+.bar-label{width:90px;font-size:.75rem;text-align:right;flex-shrink:0;font-weight:600}
+.bar-track{flex:1;background:#f1f5f9;border-radius:6px;height:30px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:6px;transition:width .3s}
+.bar-text{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:.72rem;font-weight:700}
+
+@media(max-width:768px){
+  .bar-label{width:70px;font-size:.68rem}
+  .bar-track{height:26px}
+  .bar-text{font-size:.65rem}
+  .kpi .v{font-size:1.05rem}
+  .kpi .l{font-size:.58rem}
+}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <h1>JR Painting Calculator</h1>
+  <small>Powder Coating Line — Capacity, Usage & Cost</small>
+</div>
+
+<!-- Desktop tabs -->
+<div class="dtabs" id="dtabs">
+  <button class="on" onclick="go('calc')">Single Part</button>
+  <button onclick="go('plan')">Production Plan</button>
+  <button onclick="go('budget')">Powder Budget</button>
+  <button onclick="go('settings')">Settings</button>
+</div>
+
+<!-- ==================== PAGE 1: SINGLE CALC ==================== -->
+<div class="page on" id="p-calc">
+  <div class="presets" id="presetBar"></div>
+  <div class="banner" id="resultBanner">
+    <div class="title">Summary</div>
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="v" id="r_cap100">—</div><div class="l">Cap @100%<br>pcs/day</div></div>
+      <div class="kpi blue"><div class="v" id="r_cap65">—</div><div class="l">Cap @OEE<br>pcs/day</div></div>
+      <div class="kpi yellow"><div class="v" id="r_ct">—</div><div class="l">Cycle Time<br>sec/pc</div></div>
+      <div class="kpi pink"><div class="v" id="r_pw">—</div><div class="l">Powder<br>kg/pc</div></div>
+      <div class="kpi cyan"><div class="v" id="r_co">—</div><div class="l">Cost<br>THB/pc</div></div>
+      <div class="kpi purple"><div class="v" id="r_mp">—</div><div class="l">Manpower<br>persons</div></div>
+    </div>
+  </div>
+  <div class="two-col">
+    <!-- Powder -->
+    <div class="card"><div class="card-h" style="background:#eff6ff;color:#1e40af">🎨 Workpiece & Powder</div><div class="card-b" id="sec_powder"></div></div>
+    <!-- Gun -->
+    <div class="card"><div class="card-h" style="background:#f0fdf4;color:#166534">🔫 Gun Settings</div><div class="card-b" id="sec_gun"></div></div>
+    <!-- Hang -->
+    <div class="card"><div class="card-h" style="background:#fef3c7;color:#92400e">📐 Hanging & Conveyor</div><div class="card-b" id="sec_hang"></div></div>
+    <!-- Manpower -->
+    <div class="card"><div class="card-h" style="background:#ecfeff;color:#0e7490">👷 Manpower</div><div class="card-b" id="sec_mp"></div></div>
+    <!-- Capacity -->
+    <div class="card"><div class="card-h" style="background:#fce7f3;color:#9d174d">📊 Capacity & Powder Usage</div><div class="card-b" id="sec_cap"></div></div>
+    <!-- Cost -->
+    <div class="card"><div class="card-h" style="background:#f5f3ff;color:#5b21b6">💰 Cost</div><div class="card-b" id="sec_cost"></div></div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 2: PRODUCTION PLAN ==================== -->
+<div class="page" id="p-plan">
+  <div class="banner">
+    <div class="title">Production Plan — Total Powder & Cost</div>
+    <div class="sub">Select parts, enter qty, see total powder usage</div>
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="v" id="pp_pcs">0</div><div class="l">Total Pcs</div></div>
+      <div class="kpi yellow"><div class="v" id="pp_kg">0</div><div class="l">Powder (kg)</div></div>
+      <div class="kpi cyan"><div class="v" id="pp_thb">0</div><div class="l">Cost (THB)</div></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-h" style="background:#fef9c3;color:#854d0e">📋 Order List</div>
+    <div class="card-b"><div class="tbl-scroll"><table class="tbl" id="planTbl"><thead></thead><tbody></tbody></table></div></div>
+  </div>
+  <div class="card"><div class="card-h" style="background:#f0fdf4;color:#166534">📦 Breakdown by Powder Type</div>
+    <div class="card-b"><div class="tbl-scroll"><table class="tbl" id="breakTbl"><thead></thead><tbody></tbody></table></div></div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 3: POWDER BUDGET ==================== -->
+<div class="page" id="p-budget">
+  <div class="banner" style="background:linear-gradient(135deg,#854d0e,#a16207)">
+    <div class="title">Powder Budget — How many balanced sets?</div>
+    <div class="sub">Enter powder on hand → see max complete sets per model (Ratio/set from CAPACITY)</div>
+    <div class="kpi-grid">
+      <div class="kpi green"><div class="v" id="pb_sets">0</div><div class="l">Total Sets</div></div>
+      <div class="kpi blue"><div class="v" id="pb_pcs">0</div><div class="l">Total Pcs</div></div>
+      <div class="kpi yellow"><div class="v" id="pb_avail">0</div><div class="l">Available (kg)</div></div>
+      <div class="kpi cyan"><div class="v" id="pb_used">0</div><div class="l">Used (kg)</div></div>
+      <div class="kpi pink"><div class="v" id="pb_rem">0</div><div class="l">Remaining (kg)</div></div>
+      <div class="kpi orange"><div class="v" id="pb_cost">0</div><div class="l">Cost (THB)</div></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-h" style="background:#fef3c7;color:#854d0e">📦 Powder Input</div>
+    <div class="card-b">
+      <div class="fld"><label>Available Powder <span class="u">kg</span></label>
+        <input type="number" id="pb_kg" value="100" min="0" step="1" oninput="calcBudget()" style="font-size:1.1rem;font-weight:800;width:130px"></div>
+      <div class="fld"><label>Mode</label>
+        <select id="pb_mode" onchange="calcBudget()" style="width:170px;text-align:left">
+          <option value="per_model">Per Model (independent)</option>
+          <option value="split">Split Evenly</option>
+          <option value="custom">Custom Sets</option>
+        </select></div>
+    </div>
+  </div>
+  <div id="budgetContent"></div>
+  <div class="card"><div class="card-h" style="background:#eff6ff;color:#1e40af">📊 Max Sets per Model</div>
+    <div class="card-b" id="budgetBars"></div>
+  </div>
+</div>
+
+<!-- ==================== PAGE 4: SETTINGS ==================== -->
+<div class="page" id="p-settings">
+  <div class="card"><div class="card-h" style="background:#f1f5f9;color:var(--txt)">⚙️ Google Sheet Connection</div>
+    <div class="card-b">
+      <div class="note" style="margin-top:0;margin-bottom:12px">
+        <strong>How to connect:</strong><br>
+        1. Open the CSV file provided → Import into Google Sheets<br>
+        2. In Google Sheets → File → Share → Publish to web → select "Comma-separated values (.csv)" → Publish<br>
+        3. Copy the published URL and paste below<br>
+        4. Press "Load Data" — done! Edit the Google Sheet anytime; just reload the app.
+      </div>
+      <label style="font-size:.78rem;color:var(--muted);display:block;margin-bottom:4px">Published CSV URL</label>
+      <input type="text" class="settings-input" id="sheetUrl" value="https://docs.google.com/spreadsheets/d/e/2PACX-1vQ61GJlhgxinUM-8LwD6her1XDgDgTpXggnx_Ahp9SDSYnI4XjJXOYN51C3BIlz49_rcaKvrrg6HYNH/pub?output=csv" placeholder="https://docs.google.com/spreadsheets/d/e/2PACX-.../pub?output=csv">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ok btn-sm" onclick="loadFromSheet()">Load Data</button>
+        <button class="btn btn-sm" onclick="saveUrl()">Save URL</button>
+        <button class="btn btn-warn btn-sm" onclick="useBuiltIn()">Use Built-in Data</button>
+      </div>
+      <div id="sheetStatus" style="margin-top:10px"></div>
+    </div>
+  </div>
+  <div class="card"><div class="card-h" style="background:#f1f5f9;color:var(--txt)">📋 Current Database</div>
+    <div class="card-b">
+      <div id="dbSummary"></div>
+      <div class="tbl-scroll" style="margin-top:10px"><table class="tbl" id="dbTbl"><thead></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- Bottom nav (mobile) -->
+<div class="bnav" id="bnav">
+  <button class="on" onclick="go('calc')"><span class="ico">🔧</span>Single</button>
+  <button onclick="go('plan')"><span class="ico">📋</span>Plan</button>
+  <button onclick="go('budget')"><span class="ico">📦</span>Budget</button>
+  <button onclick="go('settings')"><span class="ico">⚙️</span>Settings</button>
+</div>
+
+<script>
+// ==================== NAV ====================
+function go(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p-'+page).classList.add('on');
+  document.querySelectorAll('.bnav button, .dtabs button').forEach(b=>b.classList.remove('on'));
+  const idx={calc:0,plan:1,budget:2,settings:3}[page];
+  document.querySelectorAll('.bnav button')[idx].classList.add('on');
+  document.querySelectorAll('.dtabs button')[idx].classList.add('on');
+  if(page==='budget') calcBudget();
+  if(page==='settings') showDbSummary();
+}
+
+// ==================== BUILT-IN DATA ====================
+const BUILTIN=[
+{id:'LC600_DOOR',model:'LC 600',setModel:'LC 600',partNo:'7517016200',description:'Flat Door 600',ratioPerSet:1,coverArea1side_mm2:246602.411,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:185,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:380.1,wpLong_mm:556.8,wpDepth_mm:12.2,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.11,hook2Long_m:0.16,hangColumn:1,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'Grey Butter SMO',supplier:'Jotun',loadingCT_sec:16.2,spray1CT_sec:12,spray2CT_sec:0,unloadingCT_sec:16.2,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:0},
+{id:'LC600_COVER',model:'LC 600',setModel:'LC 600',partNo:'7517015200(345)',description:'Cover 600',ratioPerSet:1,coverArea1side_mm2:206074.393,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:185,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:556.8,wpLong_mm:339.5,wpDepth_mm:12.2,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.11,hook2Long_m:0.16,hangColumn:1,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'Grey Butter SMO',supplier:'Jotun',loadingCT_sec:12,spray1CT_sec:8,spray2CT_sec:0,unloadingCT_sec:12,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:0},
+{id:'LC600_GRAND',model:'LC 600',setModel:'LC 600',partNo:'7517014800',description:'Grand Plate 600',ratioPerSet:2,coverArea1side_mm2:63458.44,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:185,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:380,wpLong_mm:131.1,wpDepth_mm:12.2,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.13,hook2Long_m:0.16,hangColumn:1,hangRow:2,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'Grey Butter SMO',supplier:'Jotun',loadingCT_sec:17,spray1CT_sec:7,spray2CT_sec:0,unloadingCT_sec:17,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:0},
+{id:'LC600_BOX',model:'LC 600',setModel:'LC 600',partNo:'7517014502',description:'Box 600',ratioPerSet:1,coverArea1side_mm2:416465.525,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:2,manualGunOutput_gmin:185,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:382.8,wpLong_mm:600,wpDepth_mm:12.2,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.11,hook2Long_m:0.16,hangColumn:1,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'Grey Butter SMO',supplier:'Jotun',loadingCT_sec:17.55,spray1CT_sec:13,spray2CT_sec:4,unloadingCT_sec:17.55,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:0},
+{id:'EZ_COV4',model:'EZ9EPL104',setModel:'EZ9EPL104',partNo:'BRU30890',description:'METAL COVER 4 WAY',ratioPerSet:1,coverArea1side_mm2:48976.2,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:138,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:195.6,wpLong_mm:245.1,wpDepth_mm:9.8,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.15,hook2Long_m:0.16,hangColumn:2,hangRow:2,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'NQPE90001',supplier:'NUOQI',loadingCT_sec:8,spray1CT_sec:4,spray2CT_sec:0,unloadingCT_sec:8,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:1},
+{id:'EZ_BOX46',model:'EZ9EPL104',setModel:'EZ9EPL104',partNo:'BRU30887',description:'METAL BOX 4/6 WAY',ratioPerSet:1,coverArea1side_mm2:109867.7382,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:185,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:189,wpLong_mm:263.33,wpDepth_mm:71.5,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.15,hook2Long_m:0.16,hangColumn:2,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'NQPE90001',supplier:'NUOQI',loadingCT_sec:11,spray1CT_sec:8,spray2CT_sec:0,unloadingCT_sec:11,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:0},
+{id:'EZ_COV6',model:'EZ9EPL106',setModel:'EZ9EPL106',partNo:'BRU30891',description:'METAL COVER 6 WAY',ratioPerSet:1,coverArea1side_mm2:46810.04,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:138,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:195.6,wpLong_mm:245.1,wpDepth_mm:9.8,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.15,hook2Long_m:0.16,hangColumn:2,hangRow:2,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'NQPE90001',supplier:'NUOQI',loadingCT_sec:8,spray1CT_sec:4,spray2CT_sec:0,unloadingCT_sec:8,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:1},
+{id:'EZ_BOX46_106',model:'EZ9EPL106',setModel:'EZ9EPL106',partNo:'BRU30887',description:'METAL BOX 4/6 WAY',ratioPerSet:1,coverArea1side_mm2:109867.7382,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:185,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:189,wpLong_mm:263.33,wpDepth_mm:71.5,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.15,hook2Long_m:0.16,hangColumn:2,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'NQPE90001',supplier:'NUOQI',loadingCT_sec:11,spray1CT_sec:8,spray2CT_sec:0,unloadingCT_sec:11,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:0},
+{id:'EZ_COV8',model:'EZ9EPL108',setModel:'EZ9EPL108',partNo:'BRU30892',description:'METAL COVER 8 WAY',ratioPerSet:1,coverArea1side_mm2:60757.65,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:145,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:195.6,wpLong_mm:321.3,wpDepth_mm:9.8,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.15,hook2Long_m:0.16,hangColumn:2,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'NQPE90001',supplier:'NUOQI',loadingCT_sec:8,spray1CT_sec:4,spray2CT_sec:0,unloadingCT_sec:8,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:1},
+{id:'EZ_BOX810',model:'EZ9EPL108',setModel:'EZ9EPL108',partNo:'BRU30888',description:'METAL BOX 8/10 WAY',ratioPerSet:1,coverArea1side_mm2:135051.52,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:185,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:189,wpLong_mm:312.53,wpDepth_mm:71.5,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.15,hook2Long_m:0.16,hangColumn:2,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'NQPE90001',supplier:'NUOQI',loadingCT_sec:11,spray1CT_sec:8,spray2CT_sec:0,unloadingCT_sec:11,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:0},
+{id:'EZ_COV10',model:'EZ9EPL110',setModel:'EZ9EPL110',partNo:'BRU30893',description:'METAL COVER 10 WAY',ratioPerSet:1,coverArea1side_mm2:58590.56,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:145,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:195.6,wpLong_mm:321.3,wpDepth_mm:9.8,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.15,hook2Long_m:0.16,hangColumn:2,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'NQPE90001',supplier:'NUOQI',loadingCT_sec:8,spray1CT_sec:5,spray2CT_sec:0,unloadingCT_sec:8,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:1},
+{id:'EZ_BOX810_110',model:'EZ9EPL110',setModel:'EZ9EPL110',partNo:'BRU30888',description:'METAL BOX 8/10 WAY',ratioPerSet:1,coverArea1side_mm2:135051.52,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:185,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:189,wpLong_mm:312.53,wpDepth_mm:71.5,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.15,hook2Long_m:0.16,hangColumn:2,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'NQPE90001',supplier:'NUOQI',loadingCT_sec:11,spray1CT_sec:8.5,spray2CT_sec:0,unloadingCT_sec:11,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:0},
+{id:'EZ_COV14',model:'EZ9EPL114',setModel:'EZ9EPL114',partNo:'BRU30894',description:'METAL COVER 14 WAY',ratioPerSet:1,coverArea1side_mm2:70371.08,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:150,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:195.6,wpLong_mm:397.5,wpDepth_mm:9.8,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.15,hook2Long_m:0.16,hangColumn:2,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'NQPE90001',supplier:'NUOQI',loadingCT_sec:8,spray1CT_sec:6,spray2CT_sec:0,unloadingCT_sec:8,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:1},
+{id:'EZ_BOX14',model:'EZ9EPL114',setModel:'EZ9EPL114',partNo:'BRU30889',description:'METAL BOX 14 WAY',ratioPerSet:1,coverArea1side_mm2:160235.62,specificGravity:1.8,filmThickness_um:80,transferEff1_pct:100,transferEff2_pct:75,manualGunQty:1,manualGunOutput_gmin:185,autoGunPerSide:2,strokeSpeed_mmin:25,reciproAdd_cm:15,overlapRatio:0.7,recycleRate_pct:90,wpWidth_mm:189,wpLong_mm:387.73,wpDepth_mm:71.5,maxHangLong_m:1.2,hanger1Long_m:0.45,hook1Long_m:0.15,hook2Long_m:0.16,hangColumn:2,hangRow:1,pitch_m:0.75,lineSpeed_mmin:3,workingHours:10.5,powderPrice_THBkg:144,powderType:'NQPE90001',supplier:'NUOQI',loadingCT_sec:11,spray1CT_sec:8.5,spray2CT_sec:0,unloadingCT_sec:11,surfaceInsp:1,airBlow:1,afterCoatingInsp:1,screen:0}
+];
+
+let DB=[];  // active database
+let modelSets=[]; // computed from DB
+
+// ==================== CSV PARSER ====================
+function parseCSV(text){
+  const lines=text.trim().split('\n');
+  const headers=lines[0].split(',').map(h=>h.trim().replace(/^"/,'').replace(/"$/,''));
+  const numCols=['ratioPerSet','coverArea1side_mm2','specificGravity','filmThickness_um','transferEff1_pct','transferEff2_pct','manualGunQty','manualGunOutput_gmin','autoGunPerSide','strokeSpeed_mmin','reciproAdd_cm','overlapRatio','recycleRate_pct','wpWidth_mm','wpLong_mm','wpDepth_mm','maxHangLong_m','hanger1Long_m','hook1Long_m','hook2Long_m','hangColumn','hangRow','pitch_m','lineSpeed_mmin','workingHours','powderPrice_THBkg','loadingCT_sec','spray1CT_sec','spray2CT_sec','unloadingCT_sec','surfaceInsp','airBlow','afterCoatingInsp','screen'];
+  return lines.slice(1).filter(l=>l.trim()).map(line=>{
+    // Handle quoted fields
+    const vals=[];let cur='';let inQ=false;
+    for(let c of line){
+      if(c==='"'){inQ=!inQ}else if(c===','&&!inQ){vals.push(cur.trim());cur=''}else{cur+=c}
+    }
+    vals.push(cur.trim());
+    const obj={};
+    headers.forEach((h,i)=>{
+      let v=vals[i]||'';
+      v=v.replace(/^"/,'').replace(/"$/,'');
+      obj[h]=numCols.includes(h)?parseFloat(v)||0:v;
+    });
+    return obj;
+  });
+}
+
+// ==================== POWDER CALC (per part) ====================
+function calcPowder(p){
+  const M=p.transferEff1_pct/100,N=p.transferEff2_pct/100;
+  const BK=p.hangColumn*p.hangRow;
+  let BE;
+  if(p.hangRow<2){BE=(p.wpLong_mm/1000)*p.hangRow+p.hook1Long_m}
+  else{BE=(p.wpLong_mm/1000)*p.hangRow+p.hook1Long_m+p.hook2Long_m*(p.hangRow-1)}
+  const R=(BE-p.hook1Long_m)+p.reciproAdd_cm/100;
+  const cpg=p.autoGunPerSide>0?R*p.lineSpeed_mmin/p.autoGunPerSide:0;
+  const ppg=N>0?(cpg*p.specificGravity*p.filmThickness_um/N)*p.overlapRatio:0;
+  const AJ=ppg*p.autoGunPerSide;
+  const AK=AJ*(M-N);const AL=AK*(p.recycleRate_pct/100);const AM=AK-AL;const AN=AJ-AL;
+  const Q=p.manualGunOutput_gmin*p.manualGunQty;
+  const BN=((p.workingHours*p.lineSpeed_mmin*60/p.pitch_m)*1)*BK;
+  const BO=BN>0?p.workingHours*3600/BN:0;
+  const BP=((p.workingHours*p.lineSpeed_mmin*60/p.pitch_m)*0.65)*BK;
+  const BQ=BP>0?p.workingHours*3600/BP:0;
+  const AP=(BN>0&&AN>0)?((((BN*BO/60)*AN)/1000)/BN)+((((BN*BO/60)*Q)/1000)/BN):0;
+  const L=(M>0&&p.specificGravity>0&&p.filmThickness_um>0)?(1000/(p.filmThickness_um*p.specificGravity))*M:0;
+  const F=(p.coverArea1side_mm2*2)/1e6;
+  const AT=L>0?F/L:0;
+  const AU=BQ>0?((BQ/60)*(Q*0.1)/1000)+AT:AT;
+  return{powderPerPc:AP,costPerPc:p.powderPrice_THBkg*AP,cap100:BN,ct100:BO,cap65:BP,ct65:BQ,
+    F,L,Q,R,AN,AM,AJ,AL,BK,AT,AU,BE};
+}
+
+// ==================== ENRICH DB ====================
+function enrichDB(){
+  DB.forEach(p=>{const c=calcPowder(p);Object.assign(p,{_pp:c.powderPerPc,_cp:c.costPerPc,_c100:c.cap100,_ct100:c.ct100,_c65:c.cap65,_calc:c})});
+  // Build model sets
+  const map={};
+  DB.forEach(p=>{
+    if(!map[p.setModel])map[p.setModel]={model:p.setModel,powderType:p.powderType,supplier:p.supplier,parts:[]};
+    map[p.setModel].parts.push(p);
+  });
+  modelSets=Object.values(map);
+  modelSets.forEach(ms=>{
+    ms.powderPerSet=ms.parts.reduce((s,p)=>s+p.ratioPerSet*p._pp,0);
+    ms.costPerSet=ms.parts.reduce((s,p)=>s+p.ratioPerSet*p._cp,0);
+    ms.pcsPerSet=ms.parts.reduce((s,p)=>s+p.ratioPerSet,0);
+    ms.color=ms.powderType.includes('NQPE')?'#f59e0b':'#3b82f6';
+  });
+}
+
+// ==================== BUILD UI ====================
+function fld(label,unit,id,val,opts={}){
+  const ro=opts.ro?'readonly':'';
+  const type=opts.type||'number';
+  const step=opts.step||'any';
+  const style=type==='text'?'text-align:left':'';
+  const w=opts.w?`width:${opts.w}px`:'';
+  return`<div class="fld"><label>${label}${unit?` <span class="u">${unit}</span>`:''}</label><input type="${type}" id="${id}" value="${val}" ${ro} step="${step}" style="${style};${w}" oninput="calc()"></div>`;
+}
+
+function buildCalcPage(){
+  // Presets
+  const bar=document.getElementById('presetBar');
+  bar.innerHTML=DB.map((p,i)=>`<button onclick="loadPart(${i})">${p.description}</button>`).join('');
+  // Sections
+  const s=id=>document.getElementById(id);
+  s('sec_powder').innerHTML=[
+    fld('Model','','c_model','','{type:"text"}'),fld('Part No.','','c_pn','','{type:"text"}'),fld('Description','','c_desc','','{type:"text",w:160}'),
+    '<div class="divider"></div>',
+    fld('Coverage Area 1 side','mm²','c_E',0),fld('Coverage Area 2 sides','m²','c_F',0,{ro:1}),
+    fld('Pcs/Set','','c_pset',1),fld('Coverage Area 2s/set','m²','c_G',0,{ro:1}),
+    '<div class="divider"></div>',
+    fld('Powder Specific Gravity','g/cm³','c_J',1.8,{step:0.1}),fld('Film Thickness','μm','c_K',80),
+    fld('Coverage Area','m²/kg','c_L',0,{ro:1}),
+    fld('Transfer Eff. 1','%','c_M',100),fld('Transfer Eff. 2','%','c_N',75),
+    fld('Powder Price','THB/kg','c_BR',144)
+  ].join('');
+  s('sec_gun').innerHTML=[
+    '<div class="stitle">Manual Gun</div>',
+    fld('Manual Gun Qty','EA','c_O',1),fld('Output/Gun','g/min','c_P',185),fld('Total Output','g/min','c_Q',0,{ro:1}),
+    '<div class="divider"></div><div class="stitle">Auto Gun</div>',
+    fld('Auto Gun/side','EA','c_V',2),fld('Stroke Speed','m/min','c_S',25),fld('Recipro Add Height','cm','c_RA',15),
+    fld('Recipro Stroke','m','c_R',0,{ro:1}),fld('Overlap Ratio','','c_AA',0.7,{step:0.05}),
+    fld('Recycle Rate','%','c_RR',90),
+    '<div class="divider"></div><div class="stitle">Output</div>',
+    fld('Cover Area/gun','m²/min','c_cpg',0,{ro:1}),fld('Auto Total','g/min','c_AJ',0,{ro:1}),
+    fld('Net Consumption','g/min','c_AN',0,{ro:1}),fld('Scrap','g/min','c_AM',0,{ro:1})
+  ].join('');
+  s('sec_hang').innerHTML=[
+    '<div class="stitle">Workpiece</div>',
+    fld('Width','mm','c_AX',380.1),fld('Long','mm','c_AY',556.8),fld('Depth','mm','c_AZ',12.2),
+    '<div class="divider"></div><div class="stitle">Hanger/JIG</div>',
+    fld('Max Hang Long','m','c_BA',1.2,{step:0.1}),fld('Hanger Long','m','c_BB',0.45,{step:0.01}),
+    fld('Hook 1','m','c_BC',0.11,{step:0.01}),fld('Hook 2','m','c_BD',0.16,{step:0.01}),
+    fld('Columns','','c_BI',1),fld('Rows','','c_BJ',1),fld('Total/JIG','pcs','c_BK',0,{ro:1}),
+    fld('WP Total Long','m','c_BE',0,{ro:1}),fld('Safety Dist.','m','c_BG',0,{ro:1}),
+    '<div class="divider"></div><div class="stitle">Conveyor</div>',
+    fld('Pitch','m','c_BH',0.75,{step:0.05}),fld('Line Speed','m/min','c_BL',3,{step:0.5}),
+    fld('Working Hours','hrs','c_BM',10.5,{step:0.5}),fld('OEE Target','%','c_OEE',65)
+  ].join('');
+  s('sec_mp').innerHTML=[
+    '<div class="stitle">Loading</div>',
+    fld('Loading CT','sec/pc','c_lct',16.2,{step:0.1}),fld('Loading MP','','c_lmp',0,{ro:1}),
+    '<div class="divider"></div><div class="stitle">Inspection</div>',
+    fld('Surface Insp.','person','c_si',1),fld('Air Blow','person','c_ab',1),
+    fld('After Coat Insp.','person','c_ai',1),fld('Screen','person','c_sc',0),
+    '<div class="divider"></div><div class="stitle">Spray</div>',
+    fld('Spray 1 CT','sec/pc','c_s1',12,{step:0.5}),fld('Spray 1 MP','','c_s1m',0,{ro:1}),
+    fld('Spray 2 CT','sec/pc','c_s2',0,{step:0.5}),fld('Spray 2 MP','','c_s2m',0,{ro:1}),
+    '<div class="divider"></div><div class="stitle">Unloading</div>',
+    fld('Unloading CT','sec/pc','c_uct',16.2,{step:0.1}),fld('Unloading MP','','c_ump',0,{ro:1})
+  ].join('');
+  s('sec_cap').innerHTML=[
+    fld('CT/JIG','sec','c_BX',0,{ro:1}),fld('Cap @100%','pcs','c_c100',0,{ro:1}),fld('CT @100%','sec','c_ct100',0,{ro:1}),
+    fld('Cap @OEE','pcs','c_c65',0,{ro:1}),fld('CT @OEE','sec','c_ct65',0,{ro:1}),
+    '<div class="divider"></div><div class="stitle">Powder</div>',
+    fld('Powder/pc','kg','c_AP',0,{ro:1}),fld('On Workpiece','kg/pc','c_AT',0,{ro:1}),
+    fld('After Baking','kg/pc','c_AU',0,{ro:1}),fld('Over Usage','%','c_AW',0,{ro:1}),
+    fld('Total Spray','kg/day','c_AR',0,{ro:1})
+  ].join('');
+  s('sec_cost').innerHTML=[
+    fld('Cost/pc','THB','c_BS',0,{ro:1}),fld('Cost/day','THB','c_BT',0,{ro:1}),
+    fld('Total Manpower','persons','c_TMP',0,{ro:1})
+  ].join('');
+}
+
+function loadPart(i){
+  const p=DB[i];if(!p)return;
+  document.querySelectorAll('.presets button').forEach((b,j)=>b.classList.toggle('on',j===i));
+  const m={c_model:p.model,c_pn:p.partNo,c_desc:p.description,c_E:p.coverArea1side_mm2,c_pset:p.ratioPerSet||1,
+    c_J:p.specificGravity,c_K:p.filmThickness_um,c_M:p.transferEff1_pct,c_N:p.transferEff2_pct,c_BR:p.powderPrice_THBkg,
+    c_O:p.manualGunQty,c_P:p.manualGunOutput_gmin,c_V:p.autoGunPerSide,c_S:p.strokeSpeed_mmin,c_RA:p.reciproAdd_cm,
+    c_AA:p.overlapRatio,c_RR:p.recycleRate_pct,
+    c_AX:p.wpWidth_mm,c_AY:p.wpLong_mm,c_AZ:p.wpDepth_mm,
+    c_BA:p.maxHangLong_m,c_BB:p.hanger1Long_m,c_BC:p.hook1Long_m,c_BD:p.hook2Long_m,
+    c_BI:p.hangColumn,c_BJ:p.hangRow,c_BH:p.pitch_m,c_BL:p.lineSpeed_mmin,c_BM:p.workingHours,c_OEE:65,
+    c_lct:p.loadingCT_sec,c_si:p.surfaceInsp,c_ab:p.airBlow,c_ai:p.afterCoatingInsp,c_sc:p.screen,
+    c_s1:p.spray1CT_sec,c_s2:p.spray2CT_sec,c_uct:p.unloadingCT_sec};
+  Object.entries(m).forEach(([k,v])=>{const el=document.getElementById(k);if(el)el.value=v});
+  calc();
+}
+
+// ==================== SINGLE CALC ====================
+function gv(id){return parseFloat(document.getElementById(id)?.value)||0}
+function sv(id,v){const el=document.getElementById(id);if(el)el.value=typeof v==='number'?(Number.isInteger(v)?v:v.toFixed(4)):v}
+function rmp(v){return Math.floor(v)===0?(v%1>0.25?1:0):(v%1>0.3?Math.floor(v)+1:Math.floor(v))}
+function rmpu(v){return Math.floor(v)===0?(v%1>0?1:0):(v%1>0.3?Math.floor(v)+1:Math.floor(v))}
+
+function calc(){
+  const E=gv('c_E'),J=gv('c_J'),K=gv('c_K'),M=gv('c_M')/100,N=gv('c_N')/100;
+  const F=E*2/1e6;sv('c_F',F);sv('c_G',F*(gv('c_pset')||1));
+  const L=(M&&J&&K)?(1000/(K*J))*M:0;sv('c_L',L);
+  const Q=gv('c_O')*gv('c_P');sv('c_Q',Q);
+  const BI=gv('c_BI'),BJ=gv('c_BJ'),BK=BI*BJ;sv('c_BK',BK);
+  const AY=gv('c_AY'),BC=gv('c_BC'),BD=gv('c_BD'),BA=gv('c_BA');
+  let BE=BJ<2?(AY/1000)*BJ+BC:(AY/1000)*BJ+BC+BD*(BJ-1);
+  sv('c_BE',BE);sv('c_BG',BA-BE);
+  const R=(BE-BC)+gv('c_RA')/100;sv('c_R',R);
+  const BL=gv('c_BL'),S=gv('c_S'),V=gv('c_V');
+  const cpg=V>0?R*BL/V:0;sv('c_cpg',cpg);
+  const AA=gv('c_AA'),rr=gv('c_RR')/100;
+  const ppg=N>0?(cpg*J*K/N)*AA:0;
+  const AJ=ppg*V;sv('c_AJ',AJ);
+  const AK=AJ*(M-N),AL=AK*rr,AM=AK-AL,AN=AJ-AL;
+  sv('c_AN',AN);sv('c_AM',AM);
+  const BH=gv('c_BH'),BM=gv('c_BM'),oee=gv('c_OEE');
+  const BX=(BH/BL)*60;sv('c_BX',BX);
+  const BN=(BM*BL*60/BH)*BK;sv('c_c100',Math.round(BN));
+  const BO=BN>0?BM*3600/BN:0;sv('c_ct100',BO);
+  const BP=(BM*BL*60/BH)*(oee/100)*BK;sv('c_c65',Math.round(BP));
+  const BQ=BP>0?BM*3600/BP:0;sv('c_ct65',BQ);
+  const AP=(BN>0&&AN>0)?((((BN*BO/60)*AN)/1000)/BN)+((((BN*BO/60)*Q)/1000)/BN):0;
+  sv('c_AP',AP);
+  const AT=L>0?F/L:0;sv('c_AT',AT);
+  const AU=BQ>0?((BQ/60)*(Q*0.1)/1000)+AT:AT;sv('c_AU',AU);
+  const AW=AU>0?AP/AU:0;sv('c_AW',(AW*100).toFixed(1)+'%');
+  sv('c_AR',BN*AP);
+  const BR=gv('c_BR'),BS=BR*AP;sv('c_BS',BS);sv('c_BT',BN*BS);
+  // Manpower
+  const lmp=rmp(gv('c_lct')*BK/BX);sv('c_lmp',lmp);
+  const s1m=rmp(gv('c_s1')*BK/BX);sv('c_s1m',s1m);
+  const s2r=BX>0?gv('c_s2')*BK/BX:0;const s2m=rmp(s2r);sv('c_s2m',s2m);
+  const ump=rmpu(gv('c_uct')*BK/BX);sv('c_ump',ump);
+  const tmp=lmp+gv('c_si')+gv('c_ab')+s1m+s2m+gv('c_ai')+ump+gv('c_sc');sv('c_TMP',tmp);
+  // Summary
+  document.getElementById('r_cap100').textContent=Math.round(BN).toLocaleString();
+  document.getElementById('r_cap65').textContent=Math.round(BP).toLocaleString();
+  document.getElementById('r_ct').textContent=BO.toFixed(2);
+  document.getElementById('r_pw').textContent=AP.toFixed(4);
+  document.getElementById('r_co').textContent=BS.toFixed(2);
+  document.getElementById('r_mp').textContent=tmp;
+}
+
+// ==================== PRODUCTION PLAN ====================
+function buildPlan(){
+  const t=document.querySelector('#planTbl thead');
+  t.innerHTML=`<tr><th style="width:36px;text-align:center"><input type="checkbox" id="ppAll" onchange="ppToggle()"></th><th>Part</th><th class="r">kg/pc</th><th class="r" style="width:80px">Qty</th><th class="r">kg</th><th class="r">THB</th></tr>`;
+  const b=document.querySelector('#planTbl tbody');
+  let html='';let lg='';
+  DB.forEach((p,i)=>{
+    if(p.setModel!==lg){html+=`<tr class="tbl-group"><td colspan="6">${p.setModel}</td></tr>`;lg=p.setModel}
+    html+=`<tr><td style="text-align:center"><input type="checkbox" class="pp-c" data-i="${i}" onchange="ppCalc()"></td>
+    <td><b>${p.partNo}</b><br><span style="font-size:.72rem;color:var(--muted)">${p.description}</span></td>
+    <td class="r">${p._pp.toFixed(5)}</td>
+    <td class="r"><input type="number" class="pp-q" data-i="${i}" value="0" min="0" oninput="ppCalc()"></td>
+    <td class="r" id="pp_t${i}">—</td><td class="r" id="pp_c${i}">—</td></tr>`;
+  });
+  b.innerHTML=html;
+}
+function ppToggle(){const c=document.getElementById('ppAll').checked;document.querySelectorAll('.pp-c').forEach(x=>x.checked=c);ppCalc()}
+function ppCalc(){
+  let tPcs=0,tKg=0,tThb=0;const pm={};
+  DB.forEach((p,i)=>{
+    const cb=document.querySelector(`.pp-c[data-i="${i}"]`);
+    const q=parseInt(document.querySelector(`.pp-q[data-i="${i}"]`).value)||0;
+    const tEl=document.getElementById('pp_t'+i),cEl=document.getElementById('pp_c'+i);
+    if(cb.checked&&q>0){
+      const kg=p._pp*q,thb=p._cp*q;tPcs+=q;tKg+=kg;tThb+=thb;
+      tEl.textContent=kg.toFixed(2);cEl.textContent=Math.round(thb).toLocaleString();
+      const k=p.powderType;if(!pm[k])pm[k]={s:p.supplier,pr:p.powderPrice_THBkg,n:0,pcs:0,kg:0,thb:0};
+      pm[k].n++;pm[k].pcs+=q;pm[k].kg+=kg;pm[k].thb+=thb;
+    }else{tEl.textContent='—';cEl.textContent='—'}
+  });
+  document.getElementById('pp_pcs').textContent=tPcs.toLocaleString();
+  document.getElementById('pp_kg').textContent=tKg.toFixed(2);
+  document.getElementById('pp_thb').textContent=Math.round(tThb).toLocaleString();
+  // Breakdown
+  const bt=document.querySelector('#breakTbl thead'),bb=document.querySelector('#breakTbl tbody');
+  bt.innerHTML='<tr><th>Powder</th><th>Supplier</th><th class="r">Pcs</th><th class="r">kg</th><th class="r">THB</th></tr>';
+  let bh='';
+  Object.entries(pm).forEach(([k,d])=>{bh+=`<tr><td><b>${k}</b></td><td>${d.s}</td><td class="r">${d.pcs.toLocaleString()}</td><td class="r b">${d.kg.toFixed(2)}</td><td class="r b">${Math.round(d.thb).toLocaleString()}</td></tr>`});
+  if(tPcs>0)bh+=`<tr class="tbl-total"><td colspan="2">TOTAL</td><td class="r">${tPcs.toLocaleString()}</td><td class="r">${tKg.toFixed(2)} kg</td><td class="r">${Math.round(tThb).toLocaleString()} THB</td></tr>`;
+  bb.innerHTML=bh||'<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px">No parts selected</td></tr>';
+}
+
+// ==================== POWDER BUDGET ====================
+function calcBudget(){
+  const kg=parseFloat(document.getElementById('pb_kg').value)||0;
+  const mode=document.getElementById('pb_mode').value;
+  const cont=document.getElementById('budgetContent');
+  let gSets=0,gPcs=0,gUsed=0,gCost=0;
+  let html='';
+  modelSets.forEach((ms,mi)=>{
+    const totR=ms.pcsPerSet;
+    html+=`<div class="card" style="margin-bottom:14px"><div class="card-h" style="background:${ms.color}11;border-left:4px solid ${ms.color}">
+      <div style="flex:1"><input type="checkbox" class="pb-mc" data-mi="${mi}" onchange="calcBudget()" checked style="width:16px;height:16px;vertical-align:middle;margin-right:6px;accent-color:${ms.color}">
+      <strong>${ms.model}</strong> <span style="font-size:.72rem;opacity:.6">${ms.powderType}</span></div>
+      <div style="font-size:.72rem;text-align:right">1 set = <b>${totR} pcs</b> | <b>${ms.powderPerSet.toFixed(4)} kg</b>
+      ${mode==='custom'?` | Sets: <input type="number" class="pb-cs" data-mi="${mi}" value="100" min="0" style="width:60px;padding:3px;border:1px solid ${ms.color};border-radius:4px;text-align:right;font-weight:700" oninput="calcBudget()">`:''}
+      </div></div>
+    <div class="card-b"><div class="tbl-scroll"><table class="tbl"><thead><tr><th>Part</th><th class="r">Ratio</th><th class="r">kg/pc</th><th class="r">Pcs</th><th class="r">kg Used</th></tr></thead><tbody id="pb_tb${mi}"></tbody></table></div></div></div>`;
+  });
+  cont.innerHTML=html;
+  // Calc
+  modelSets.forEach((ms,mi)=>{
+    const cb=cont.querySelector(`.pb-mc[data-mi="${mi}"]`);
+    const sel=cb?cb.checked:true;
+    let sets=0;
+    if(!sel){sets=0}
+    else if(mode==='per_model'){sets=ms.powderPerSet>0?Math.floor(kg/ms.powderPerSet):0}
+    else if(mode==='split'){const n=cont.querySelectorAll('.pb-mc:checked').length;const ea=n>0?kg/n:0;sets=ms.powderPerSet>0?Math.floor(ea/ms.powderPerSet):0}
+    else{const ci=cont.querySelector(`.pb-cs[data-mi="${mi}"]`);sets=ci?parseInt(ci.value)||0:0}
+    let mU=0,mC=0,mP=0;let rh='';
+    ms.parts.forEach(p=>{
+      const pcs=sets*p.ratioPerSet,u=pcs*p._pp,c=pcs*p._cp;mU+=u;mC+=c;mP+=pcs;
+      rh+=`<tr><td><b>${p.partNo}</b><br><span style="font-size:.68rem;color:var(--muted)">${p.description}</span></td>
+        <td class="r"><span style="background:${ms.color}22;color:${ms.color};padding:2px 8px;border-radius:10px;font-weight:700">×${p.ratioPerSet}</span></td>
+        <td class="r">${p._pp.toFixed(5)}</td>
+        <td class="r b">${sel&&sets?pcs.toLocaleString():'—'}</td>
+        <td class="r">${sel&&sets?u.toFixed(3):'—'}</td></tr>`;
+    });
+    if(sel&&sets){rh+=`<tr class="tbl-total"><td colspan="2">${sets.toLocaleString()} sets</td><td></td><td class="r">${mP.toLocaleString()}</td><td class="r">${mU.toFixed(2)} kg</td></tr>`;gSets+=sets;gPcs+=mP;gUsed+=mU;gCost+=mC}
+    const tb=document.getElementById('pb_tb'+mi);if(tb)tb.innerHTML=rh;
+  });
+  document.getElementById('pb_sets').textContent=gSets.toLocaleString();
+  document.getElementById('pb_pcs').textContent=gPcs.toLocaleString();
+  document.getElementById('pb_avail').textContent=kg.toFixed(1);
+  document.getElementById('pb_used').textContent=mode==='per_model'?'—':gUsed.toFixed(2);
+  document.getElementById('pb_rem').textContent=mode==='per_model'?'—':(kg-gUsed).toFixed(2);
+  document.getElementById('pb_cost').textContent=mode==='per_model'?'—':Math.round(gCost).toLocaleString();
+  // Bars
+  const bc=document.getElementById('budgetBars');
+  if(kg<=0){bc.innerHTML='<div style="text-align:center;color:var(--muted);padding:16px">Enter powder above</div>';return}
+  const maxS=Math.max(...modelSets.map(ms=>ms.powderPerSet>0?Math.floor(kg/ms.powderPerSet):0),1);
+  bc.innerHTML=modelSets.map(ms=>{
+    const s=ms.powderPerSet>0?Math.floor(kg/ms.powderPerSet):0;
+    const pct=(s/maxS)*100;
+    return`<div class="bar-row"><div class="bar-label">${ms.model}</div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${ms.color}"></div><span class="bar-text" style="color:${pct>40?'#fff':'var(--txt)'}">${s.toLocaleString()} sets (${(s*ms.pcsPerSet).toLocaleString()} pcs)</span></div></div>`;
+  }).join('');
+}
+
+// ==================== GOOGLE SHEET ====================
+function saveUrl(){localStorage.setItem('jr_sheet_url',document.getElementById('sheetUrl').value);showStatus('ok','URL saved!')}
+function showStatus(type,msg){document.getElementById('sheetStatus').innerHTML=`<div class="status ${type}">${msg}</div>`}
+
+async function loadFromSheet(){
+  const url=document.getElementById('sheetUrl').value.trim();
+  if(!url){showStatus('err','Please paste a published CSV URL');return}
+  showStatus('info','Loading...');
+  try{
+    const res=await fetch(url);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const text=await res.text();
+    const rows=parseCSV(text);
+    if(rows.length===0)throw new Error('No data rows found');
+    DB=rows;enrichDB();rebuildAll();
+    localStorage.setItem('jr_sheet_url',url);
+    showStatus('ok',`Loaded ${DB.length} parts from Google Sheet`);
+  }catch(e){showStatus('err','Error: '+e.message+'<br>Make sure the sheet is published as CSV')}
+}
+
+function useBuiltIn(){DB=JSON.parse(JSON.stringify(BUILTIN));enrichDB();rebuildAll();showStatus('ok','Using built-in data ('+DB.length+' parts)')}
+
+function showDbSummary(){
+  const el=document.getElementById('dbSummary');
+  el.innerHTML=`<div style="font-size:.85rem"><b>${DB.length}</b> parts | <b>${modelSets.length}</b> models | Source: <b>${localStorage.getItem('jr_sheet_url')?'Google Sheet':'Built-in'}</b></div>`;
+  const t=document.querySelector('#dbTbl thead'),b=document.querySelector('#dbTbl tbody');
+  t.innerHTML='<tr><th>ID</th><th>Model</th><th>Part No.</th><th>Description</th><th class="r">Ratio</th><th class="r">kg/pc</th></tr>';
+  b.innerHTML=DB.map(p=>`<tr><td style="font-size:.72rem">${p.id}</td><td>${p.model}</td><td><b>${p.partNo}</b></td><td>${p.description}</td><td class="r">${p.ratioPerSet}</td><td class="r">${p._pp.toFixed(5)}</td></tr>`).join('');
+}
+
+function rebuildAll(){buildCalcPage();buildPlan();if(DB.length)loadPart(0)}
+
+// ==================== INIT ====================
+const DEFAULT_SHEET='https://docs.google.com/spreadsheets/d/e/2PACX-1vQ61GJlhgxinUM-8LwD6her1XDgDgTpXggnx_Ahp9SDSYnI4XjJXOYN51C3BIlz49_rcaKvrrg6HYNH/pub?output=csv';
+const savedUrl=localStorage.getItem('jr_sheet_url')||DEFAULT_SHEET;
+document.getElementById('sheetUrl').value=savedUrl;
+DB=JSON.parse(JSON.stringify(BUILTIN));
+enrichDB();rebuildAll();
+// Auto-load from Google Sheet on startup
+(async()=>{
+  try{
+    const res=await fetch(savedUrl);
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const text=await res.text();
+    const rows=parseCSV(text);
+    if(rows.length>0){DB=rows;enrichDB();rebuildAll();showStatus('ok','Auto-loaded '+DB.length+' parts from Google Sheet')}
+  }catch(e){showStatus('info','Using built-in data (Google Sheet unavailable)')}
+})();
+</script>
+</body>
+</html>
